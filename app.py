@@ -24,7 +24,9 @@ from Core.validator import (
 )
 
 from Core.prompt_builder import (
-    build_prompt
+    build_prompt,
+    build_scenario_prompt,
+    build_universal_scenario_prompt
 )
 
 from Core.parser import (
@@ -49,13 +51,13 @@ from Core.executor import (
 )
 
 
-# PAGE CONFIG
+# ── PAGE CONFIG ───────────────────────────────────────────
 st.set_page_config(
     page_title="APIForge",
     layout="wide"
 )
 
-# SESSION INIT
+# ── SESSION INIT ──────────────────────────────────────────
 if "generated_code" not in st.session_state:
     st.session_state["generated_code"] = None
 
@@ -74,18 +76,28 @@ if "repaired_code" not in st.session_state:
 if "repair_history" not in st.session_state:
     st.session_state["repair_history"] = []
 
+if "scenario_code" not in st.session_state:
+    st.session_state["scenario_code"] = None
 
-# UI HEADER
+if "scenario_language" not in st.session_state:
+    st.session_state["scenario_language"] = "cypress"
+
+
+# ── UI HEADER ─────────────────────────────────────────────
 st.title("🚀 APIForge")
 st.caption("AI-Powered API Code Generation, Execution and Repair")
 st.divider()
 
-# SIDEBAR
+# ── SIDEBAR ───────────────────────────────────────────────
 with st.sidebar:
     st.header("⚙ APIForge Control Panel")
     mode = st.radio(
         "Choose Input Mode",
-        ["Manual", "Smart Paste"]
+        [
+            "Manual",
+            "Smart Paste",
+            "Scenario Generator"
+        ]
     )
     st.divider()
     st.info(
@@ -98,7 +110,7 @@ with st.sidebar:
         """
     )
 
-# MAIN LAYOUT
+# ── MAIN LAYOUT ───────────────────────────────────────────
 left_col, right_col = st.columns([2, 1])
 
 with left_col:
@@ -109,7 +121,7 @@ with right_col:
     st.success(mode)
 
 
-# DEFAULTS
+# ── DEFAULTS ──────────────────────────────────────────────
 api_url = ""
 method = "GET"
 auth_type = "public"
@@ -121,7 +133,9 @@ response_format = "json"
 api_notes = ""
 
 
+# ══════════════════════════════════════════════════════════
 # MANUAL MODE
+# ══════════════════════════════════════════════════════════
 if mode == "Manual":
 
     st.subheader("Manual Mode")
@@ -159,8 +173,42 @@ if mode == "Manual":
     params = parse_key_value_input(params_input)
     body = parse_body_input(body_input)
 
-# SMART PASTE
-else:
+    # ── GENERATE BUTTON ───────────────────────────────────
+    generate_clicked = st.button("🚀 Generate Code", type="primary")
+    st.write("")
+
+    if generate_clicked:
+
+        errors = validate_inputs(api_url, method, auth_type, response_format)
+
+        if errors:
+            for error in errors:
+                st.error(error)
+
+        else:
+            auth_instruction = build_auth_instruction(auth_type, auth_value)
+
+            prompt = build_prompt(
+                api_url, method, auth_type, auth_instruction,
+                headers, params, body, response_format, api_notes
+            )
+
+            with st.spinner("Generating..."):
+                code = generate_code(prompt)
+
+            filename = save_code(code)
+
+            st.session_state["generated_code"] = code
+            st.session_state["filename"] = filename
+            st.session_state["stdout"] = None
+            st.session_state["stderr"] = None
+            st.session_state["repaired_code"] = None
+
+
+# ══════════════════════════════════════════════════════════
+# SMART PASTE MODE
+# ══════════════════════════════════════════════════════════
+elif mode == "Smart Paste":
 
     st.subheader("Smart Paste Mode")
 
@@ -188,41 +236,228 @@ else:
         response_format = "json"
         api_notes = ""
 
+    # ── GENERATE BUTTON ───────────────────────────────────
+    generate_clicked = st.button("🚀 Generate Code", type="primary")
+    st.write("")
 
-# ── GENERATE ──────────────────────────────────────────────
-generate_clicked = st.button("🚀 Generate Code", type="primary")
-st.write("")
+    if generate_clicked:
 
-if generate_clicked:
+        errors = validate_inputs(api_url, method, auth_type, response_format)
 
-    errors = validate_inputs(api_url, method, auth_type, response_format)
+        if errors:
+            for error in errors:
+                st.error(error)
 
-    if errors:
-        for error in errors:
-            st.error(error)
+        else:
+            auth_instruction = build_auth_instruction(auth_type, auth_value)
 
-    else:
-        auth_instruction = build_auth_instruction(auth_type, auth_value)
+            prompt = build_prompt(
+                api_url, method, auth_type, auth_instruction,
+                headers, params, body, response_format, api_notes
+            )
 
-        prompt = build_prompt(
-            api_url, method, auth_type, auth_instruction,
-            headers, params, body, response_format, api_notes
+            with st.spinner("Generating..."):
+                code = generate_code(prompt)
+
+            filename = save_code(code)
+
+            st.session_state["generated_code"] = code
+            st.session_state["filename"] = filename
+            st.session_state["stdout"] = None
+            st.session_state["stderr"] = None
+            st.session_state["repaired_code"] = None
+
+
+# ══════════════════════════════════════════════════════════
+# SCENARIO GENERATOR MODE
+# ══════════════════════════════════════════════════════════
+else:
+
+    st.subheader("🧪 Scenario Generator")
+
+    st.caption(
+        "Paste anything — API docs, curl, plain English, "
+        "mixed language, code snippets. AI will understand and "
+        "generate test scenarios automatically."
+    )
+
+    st.divider()
+
+    # ── INPUT AREA ────────────────────────────────────────
+    with st.expander("📥 Input", expanded=True):
+
+        scenario_input_mode = st.radio(
+            "Input Type",
+            [
+                "Raw Input (paste anything)",
+                "Structured Input (manual fields)"
+            ],
+            horizontal=True
         )
 
-        with st.spinner("Generating..."):
-            code = generate_code(prompt)
+        st.divider()
 
-        filename = save_code(code)
+        if scenario_input_mode == "Raw Input (paste anything)":
 
-        st.session_state["generated_code"] = code
-        st.session_state["filename"] = filename
-        st.session_state["stdout"] = None
-        st.session_state["stderr"] = None
-        st.session_state["repaired_code"] = None
+            raw_input = st.text_area(
+                "Paste API description, curl, docs, or anything",
+                height=250,
+                placeholder=(
+                    "Examples:\n"
+                    "POST /sd/pre-url | auth | body: {file_name, file_type, file_size}\n\n"
+                    "or paste a curl command\n\n"
+                    "or write in plain English: create a login api with email and password"
+                )
+            )
+
+        else:
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                s_api_url = st.text_input("API URL", key="s_url")
+                s_method = st.selectbox(
+                    "HTTP Method",
+                    ["GET", "POST", "PUT", "PATCH", "DELETE"],
+                    key="s_method"
+                )
+
+            with col2:
+                s_auth_type = st.selectbox(
+                    "Authentication Type",
+                    ["public", "basic", "bearer", "api key"],
+                    key="s_auth"
+                )
+                s_auth_value = st.text_input(
+                    "Authentication Value",
+                    key="s_auth_val"
+                )
+
+            s_body_input = st.text_area(
+                "Request Body",
+                key="s_body",
+                placeholder='{"field_name": "string", "field_name2": 0}'
+            )
+
+            s_params_input = st.text_area(
+                "Query Parameters",
+                key="s_params"
+            )
+
+            s_api_notes = st.text_area(
+                "API Notes",
+                key="s_notes"
+            )
+
+    # ── OUTPUT LANGUAGE ───────────────────────────────────
+    with st.expander("⚙️ Output Settings", expanded=True):
+
+        output_language = st.radio(
+            "Output Language",
+            ["Cypress", "Python"],
+            horizontal=True
+        )
+
+        st.session_state["scenario_language"] = output_language.lower()
+
+    # ── GENERATE SCENARIOS BUTTON ─────────────────────────
+    generate_scenarios_clicked = st.button(
+        "🧪 Generate Scenarios",
+        type="primary"
+    )
+
+    if generate_scenarios_clicked:
+
+        lang = st.session_state["scenario_language"]
+
+        if scenario_input_mode == "Raw Input (paste anything)":
+
+            if not raw_input or not raw_input.strip():
+                st.error("Please paste some API input first.")
+
+            else:
+                with st.spinner("Analysing input and generating scenarios..."):
+                    prompt = build_universal_scenario_prompt(
+                        raw_input=raw_input,
+                        output_language=lang
+                    )
+                    scenario_code = generate_code(prompt)
+
+                st.session_state["scenario_code"] = scenario_code
+
+        else:
+
+            s_errors = validate_inputs(
+                s_api_url,
+                s_method,
+                s_auth_type,
+                "json"
+            )
+
+            if s_errors:
+                for error in s_errors:
+                    st.error(error)
+
+            else:
+                s_auth_instruction = build_auth_instruction(
+                    s_auth_type,
+                    s_auth_value
+                )
+
+                s_body = parse_body_input(s_body_input)
+                s_params = parse_key_value_input(s_params_input)
+
+                with st.spinner("Generating scenarios..."):
+                    prompt = build_scenario_prompt(
+                        api_url=s_api_url,
+                        method=s_method,
+                        auth_type=s_auth_type,
+                        auth_instruction=s_auth_instruction,
+                        headers={},
+                        params=s_params,
+                        body=s_body,
+                        response_format="json",
+                        api_notes=s_api_notes,
+                        output_language=lang
+                    )
+                    scenario_code = generate_code(prompt)
+
+                st.session_state["scenario_code"] = scenario_code
+
+    # ── SHOW GENERATED SCENARIOS ──────────────────────────
+    if st.session_state["scenario_code"]:
+
+        st.divider()
+        st.subheader("🧪 Generated Scenarios")
+
+        lang = st.session_state["scenario_language"]
+
+        display_language = "javascript" if lang == "cypress" else "python"
+        file_extension = "cy.js" if lang == "cypress" else "py"
+        file_mime = (
+            "text/javascript"
+            if lang == "cypress"
+            else "text/x-python"
+        )
+
+        st.code(
+            st.session_state["scenario_code"],
+            language=display_language
+        )
+
+        st.download_button(
+            label=f"⬇ Download Scenarios (.{file_extension})",
+            data=st.session_state["scenario_code"],
+            file_name=f"api_scenarios.{file_extension}",
+            mime=file_mime
+        )
 
 
-# ── SECTION 1 : GENERATED CODE ────────────────────────────
-if st.session_state["generated_code"]:
+# ══════════════════════════════════════════════════════════
+# GENERATED CODE SECTION
+# (Only shown in Manual and Smart Paste modes)
+# ══════════════════════════════════════════════════════════
+if mode in ["Manual", "Smart Paste"] and st.session_state["generated_code"]:
 
     st.divider()
     st.subheader("💻 Generated Code")
@@ -239,7 +474,7 @@ if st.session_state["generated_code"]:
         mime="text/x-python"
     )
 
-    # ── SECTION 2 : EXECUTION ─────────────────────────────
+    # ── EXECUTION SECTION ─────────────────────────────────
     st.divider()
     st.subheader("▶ Execution")
 
@@ -253,7 +488,6 @@ if st.session_state["generated_code"]:
         st.session_state["stdout"] = stdout
         st.session_state["stderr"] = stderr
 
-    # SHOW EXECUTION RESULT
     if st.session_state["stderr"]:
 
         title, message = classify_error(st.session_state["stderr"])
@@ -271,7 +505,7 @@ if st.session_state["generated_code"]:
     else:
         st.info("Click 'Run Generated Code' to execute.")
 
-    # ── SECTION 3 : REPAIR ────────────────────────────────
+    # ── REPAIR SECTION ────────────────────────────────────
     if st.session_state["stderr"]:
 
         st.divider()
