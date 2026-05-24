@@ -20,6 +20,7 @@ Built to simplify API integration workflows through intelligent code generation 
 - Generated code execution
 - Repair agent for failed code
 - Download generated and repaired code
+- Session-safe repair history
 
 ---
 
@@ -44,9 +45,11 @@ It includes agentic capabilities such as:
 - Sidebar controls
 - Tabs for Code / Execution / Repair
 - Expandable input sections
-- Cleaner execution UX
+- Clean execution UX
 - Download buttons
-- Smart Paste experience
+- Smart Paste workflow
+- Repair history panel
+- Technical error viewer
 
 ---
 
@@ -62,6 +65,7 @@ Input
 → Generate Code
 → Execute
 → Detect Error
+→ Classify Error
 → Repair
 → Session Memory
 ```
@@ -85,21 +89,35 @@ APIForge/
 │
 ├── app.py
 ├── main.py
-├── config.py
-├── parser.py
-├── curl_parser.py
-├── validator.py
-├── auth_handler.py
-├── prompt_builder.py
-├── code_generator.py
-├── executor.py
-├── repair_agent.py
-├── repair_memory.py
-├── error_classifier.py
-├── file_handler.py
-├── requirements.txt
 ├── README.md
-└── .env
+├── requirements.txt
+├── .env
+├── .gitignore
+│
+├── Core/
+│   ├── parser.py
+│   ├── validator.py
+│   ├── prompt_builder.py
+│   ├── executor.py
+│   ├── file_handler.py
+│   └── auth_handler.py
+│
+├── Agents/
+│   ├── code_generator.py
+│   ├── repair_agent.py
+│   ├── repair_memory.py
+│   └── error_classifier.py
+│
+├── Config/
+│   └── config.py
+│
+├── Generated/
+│   └── generated_code.py
+│
+├── Data/
+│   └── repair_history.json
+│
+└── venv/
 ```
 
 ---
@@ -168,13 +186,13 @@ GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 
 ### 7. Run APIForge
 
-Streamlit UI:
+### Streamlit UI
 
 ```bash
 streamlit run app.py
 ```
 
-CLI version:
+### Core Engine
 
 ```bash
 python main.py
@@ -204,9 +222,9 @@ APIForge supports:
 Paste curl commands and APIForge automatically:
 
 - Parses curl
-- Detects auth
+- Detects authentication
 - Extracts headers
-- Extracts params
+- Extracts parameters
 - Extracts request body
 - Generates runnable code
 
@@ -222,17 +240,15 @@ curl --request GET \
 
 ## 🔧 Error Intelligence
 
-APIForge classifies execution failures into human-readable categories.
-
-Examples:
+APIForge classifies execution failures into readable categories.
 
 | Error Type | Classification |
 |------------|---------------|
-| DNS failure | 🌐 Connection Error |
-| Invalid token | 🔐 Unauthorized |
+| DNS Failure | 🌐 Connection Error |
+| Invalid Token | 🔐 Unauthorized |
 | Timeout | ⏳ Timeout Error |
-| JSON mismatch | 📄 JSON Parsing Error |
-| HTTP failures | ⚠ HTTP Error |
+| JSON Mismatch | 📄 JSON Parsing Error |
+| HTTP Failure | ⚠ HTTP Error |
 
 ---
 
@@ -243,6 +259,7 @@ When execution fails:
 ```text
 Run
 → Error Detection
+→ Error Classification
 → Repair Agent
 → Repair History
 → Re-run
@@ -253,42 +270,46 @@ Repair history is:
 - Session-based
 - Privacy-safe
 - Non-persistent across users
+- Visible only within current session
 
 ---
 
 ## 📸 Screenshots
 
-Add screenshots here after deployment.
+Add screenshots after deployment.
 
-Suggested:
+Suggested sections:
 
 - Home UI
+- Manual Mode
 - Smart Paste Mode
 - Generated Code
 - Error Classification
 - Repair Flow
+- Repair History
 
 ---
 
 ## 🛣 Roadmap
 
-### Current
+## Current
 
 ✅ Code generation  
 ✅ Execution  
-✅ Repair  
-✅ Error intelligence  
-✅ Session memory  
+✅ Repair agent  
+✅ Error classification  
+✅ Session repair memory  
+✅ Smart Paste  
 ✅ UI polish  
 ✅ GitHub integration  
 
-### Planned
+## Planned
 
 - Auto-repair loop (V2)
 - Deployment
 - Smarter repair strategies
 - Multi-model support
-- Enhanced agent workflow
+- Enhanced agent workflows
 
 ---
 
@@ -296,7 +317,10 @@ Suggested:
 
 Contributions, improvements and feedback are welcome.
 
-Fork the repository and create a pull request.
+1. Fork repository
+2. Create feature branch
+3. Commit changes
+4. Open pull request
 
 ---
 
