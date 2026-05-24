@@ -276,17 +276,26 @@ Repair history is:
 
 ## 📸 Screenshots
 
-Add screenshots after deployment.
+### Home UI
+![Home UI](Screenshots/Home%20UI.png)
 
-Suggested sections:
+### Manual Mode
+![Manual Mode](Screenshots/Manual%20Mode.png)
 
-- Home UI
-- Manual Mode
-- Smart Paste Mode
-- Generated Code
-- Error Classification
-- Repair Flow
-- Repair History
+### Smart Paste Mode
+![Smart Paste](Screenshots/Smart%20Paste%20Mode.png)
+
+### Generated Code
+![Generated Code](Screenshots/Generated%20Code.png)
+
+### Error Classification
+![Error Classification](Screenshots/Error%20Classification.png)
+
+### Repair Flow
+![Repair Flow](Screenshots/Repair%20Flow.png)
+
+### Repair History
+![Repair History](Screenshots/Repair%20History.png)
 
 ---
 
