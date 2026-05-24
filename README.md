@@ -280,7 +280,7 @@ Add screenshots after deployment.
 
 Suggested sections:
 
-- Home UI![alt text](image.png)
+- Home UI
 - Manual Mode
 - Smart Paste Mode
 - Generated Code
@@ -306,7 +306,6 @@ Suggested sections:
 ## Planned
 
 - Auto-repair loop (V2)
-- Deployment
 - Smarter repair strategies
 - Multi-model support
 - Enhanced agent workflows
