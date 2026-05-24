@@ -5,14 +5,10 @@ from google import genai
 
 load_dotenv()
 
-API_KEY = (
-    st.secrets.get(
-        "GOOGLE_API_KEY",
-        os.getenv(
-            "GOOGLE_API_KEY"
-        )
-    )
-)
+try:
+    API_KEY = st.secrets["GOOGLE_API_KEY"]
+except:
+    API_KEY = os.getenv("GOOGLE_API_KEY")
 
 client = genai.Client(
     api_key=API_KEY
