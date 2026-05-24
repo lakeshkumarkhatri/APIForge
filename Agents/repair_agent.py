@@ -19,6 +19,10 @@ IMPORTANT RULES:
 7. Return executable Python code only.
 8. No markdown.
 9. No explanations.
+10. Never install packages.
+11. Never modify environment.
+12. Assume dependencies are managed through requirements.txt.
+13. Only repair API code logic and error handling.
 
 ORIGINAL CODE:
 
