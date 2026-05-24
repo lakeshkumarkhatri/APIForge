@@ -1,9 +1,11 @@
 import subprocess
+import sys
+
 
 def run_generated_code(filename):
     try:
         result = subprocess.run(
-            ["python", filename],
+            [sys.executable, filename],
             capture_output=True,
             text=True
         )
