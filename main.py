@@ -1,16 +1,16 @@
-from validator import validate_inputs
-from config import client, MODEL_NAME
-from prompt_builder import build_prompt
-from file_handler import save_code
-from executor import run_generated_code
-from parser import (
+from Core.validator import validate_inputs
+from Config.config import client, MODEL_NAME
+from Core.prompt_builder import build_prompt
+from Core.file_handler import save_code
+from Core.executor import run_generated_code
+from Core.parser import (
     parse_key_value_input,
     parse_body_input
 )
-from auth_handler import build_auth_instruction
-from repair_agent import repair_code
-from curl_parser import parse_curl
-from code_generator import generate_code
+from Core.auth_handler import build_auth_instruction
+from Agents.repair_agent import repair_code
+from Core.curl_parser import parse_curl
+from Core.code_generator import generate_code
 
 print("=== API Agent V1 ===")
 

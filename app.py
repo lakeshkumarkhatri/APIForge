@@ -1,27 +1,52 @@
 import streamlit as st
 
 from datetime import datetime
-from error_classifier import (
+
+from Agents.error_classifier import (
     classify_error
 )
-from repair_memory import (
+
+from Agents.repair_memory import (
     save_repair_log,
     get_recent_repairs
 )
-from validator import validate_inputs
-from prompt_builder import build_prompt
-from parser import (
+
+from Core.code_generator import (
+    generate_code
+)
+
+from Agents.repair_agent import (
+    repair_code
+)
+
+from Core.validator import (
+    validate_inputs
+)
+
+from Core.prompt_builder import (
+    build_prompt
+)
+
+from Core.parser import (
     parse_key_value_input,
     parse_body_input
 )
-from auth_handler import (
+
+from Core.auth_handler import (
     build_auth_instruction
 )
-from curl_parser import parse_curl
-from code_generator import generate_code
-from file_handler import save_code
-from executor import run_generated_code
-from repair_agent import repair_code
+
+from Core.curl_parser import (
+    parse_curl
+)
+
+from Core.file_handler import (
+    save_code
+)
+
+from Core.executor import (
+    run_generated_code
+)
 
 
 # PAGE CONFIG

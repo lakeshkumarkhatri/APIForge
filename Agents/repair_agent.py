@@ -1,4 +1,4 @@
-from config import client, MODEL_NAME
+from Config.config import client, MODEL_NAME
 
 def repair_code(
     original_code,

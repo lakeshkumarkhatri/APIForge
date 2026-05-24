@@ -280,7 +280,7 @@ Add screenshots after deployment.
 
 Suggested sections:
 
-- Home UI
+- Home UI![alt text](image.png)
 - Manual Mode
 - Smart Paste Mode
 - Generated Code
