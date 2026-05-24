@@ -74,6 +74,9 @@ if "repaired_code" not in st.session_state:
 if "repair_history" not in st.session_state:
     st.session_state["repair_history"] = []
 
+if "active_tab" not in st.session_state:
+    st.session_state["active_tab"] = 0
+
 
 # UI HEADER
 st.title(
@@ -406,6 +409,25 @@ if st.session_state[
         ]
     )
 
+    if st.session_state["active_tab"] == 1:
+        st.markdown(
+            """
+            <script>
+            window.parent.document.querySelectorAll('[role="tab"]')[1].click();
+            </script>
+            """,
+            unsafe_allow_html=True
+    )
+
+    elif st.session_state["active_tab"] == 2:
+        st.markdown(
+            """
+            <script>
+            window.parent.document.querySelectorAll('[role="tab"]')[2].click();
+            </script>
+            """,
+            unsafe_allow_html=True
+    )
     # TAB 1
     with tab1:
         st.divider()
@@ -433,9 +455,13 @@ if st.session_state[
     # TAB 2
     with tab2:
 
-        if st.button(
-            "Run Generated Code"
-        ):
+            if st.button(
+                 "Run Generated Code"
+             ):
+
+                st.session_state[
+                    "active_tab"
+                ] = 1
 
             with st.spinner(
                 "Running..."
