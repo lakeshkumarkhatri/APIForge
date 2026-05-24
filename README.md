@@ -6,9 +6,11 @@ APIForge is an AI-powered developer tool that generates, executes, classifies an
 
 Built to simplify API integration workflows through intelligent code generation and agent-assisted debugging.
 
+🌐 **Live App:** https://apiforge.streamlit.app
+
 ---
 
-## ✨ Features
+# ✨ Features
 
 ## Core Features
 
@@ -24,7 +26,7 @@ Built to simplify API integration workflows through intelligent code generation 
 
 ---
 
-## 🧠 Agent Intelligence
+# 🧠 Agent Intelligence
 
 APIForge is more than a code generator.
 
@@ -39,11 +41,12 @@ It includes agentic capabilities such as:
 
 ---
 
-## 🎨 UI Features
+# 🎨 UI Features
 
 - Professional Streamlit interface
 - Sidebar controls
-- Tabs for Code / Execution / Repair
+- Structured workflow sections
+- Generated → Execute → Repair flow
 - Expandable input sections
 - Clean execution UX
 - Download buttons
@@ -53,7 +56,7 @@ It includes agentic capabilities such as:
 
 ---
 
-## 🏗 Architecture
+# 🏗 Architecture
 
 APIForge follows a modular agent workflow:
 
@@ -67,12 +70,12 @@ Input
 → Detect Error
 → Classify Error
 → Repair
-→ Session Memory
+→ Session Repair History
 ```
 
 ---
 
-## ⚙ Tech Stack
+# ⚙ Tech Stack
 
 - Python
 - Streamlit
@@ -82,7 +85,7 @@ Input
 
 ---
 
-## 📂 Project Structure
+# 📂 Project Structure
 
 ```text
 APIForge/
@@ -91,7 +94,7 @@ APIForge/
 ├── main.py
 ├── README.md
 ├── requirements.txt
-├── .env
+├── LICENSE
 ├── .gitignore
 │
 ├── Core/
@@ -100,6 +103,7 @@ APIForge/
 │   ├── prompt_builder.py
 │   ├── executor.py
 │   ├── file_handler.py
+│   ├── curl_parser.py
 │   └── auth_handler.py
 │
 ├── Agents/
@@ -114,17 +118,14 @@ APIForge/
 ├── Generated/
 │   └── generated_code.py
 │
-├── Data/
-│   └── repair_history.json
-│
-└── venv/
+└── Screenshots/
 ```
 
 ---
 
-## 🚀 Getting Started
+# 🚀 Getting Started
 
-### 1. Clone Repository
+## 1. Clone Repository
 
 ```bash
 git clone https://github.com/lakeshkumarkhatri/APIForge.git
@@ -132,7 +133,7 @@ git clone https://github.com/lakeshkumarkhatri/APIForge.git
 
 ---
 
-### 2. Move Into Project
+## 2. Move Into Project
 
 ```bash
 cd APIForge
@@ -140,7 +141,7 @@ cd APIForge
 
 ---
 
-### 3. Create Virtual Environment
+## 3. Create Virtual Environment
 
 ```bash
 python -m venv venv
@@ -148,7 +149,7 @@ python -m venv venv
 
 ---
 
-### 4. Activate Virtual Environment
+## 4. Activate Virtual Environment
 
 ### Windows
 
@@ -164,7 +165,7 @@ source venv/bin/activate
 
 ---
 
-### 5. Install Dependencies
+## 5. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -172,19 +173,19 @@ pip install -r requirements.txt
 
 ---
 
-### 6. Add Environment Variables
+## 6. Add Environment Variables
 
 Create a `.env` file.
 
 Add:
 
 ```env
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+GOOGLE_API_KEY=YOUR_GEMINI_API_KEY
 ```
 
 ---
 
-### 7. Run APIForge
+## 7. Run APIForge
 
 ### Streamlit UI
 
@@ -200,7 +201,17 @@ python main.py
 
 ---
 
-## 🧪 Supported Workflows
+# 🌐 Live Deployment
+
+APIForge is deployed on Streamlit Cloud.
+
+Live URL:
+
+https://apiforge.streamlit.app
+
+---
+
+# 🧪 Supported Workflows
 
 ## Manual Mode
 
@@ -238,7 +249,7 @@ curl --request GET \
 
 ---
 
-## 🔧 Error Intelligence
+# 🔧 Error Intelligence
 
 APIForge classifies execution failures into readable categories.
 
@@ -252,7 +263,7 @@ APIForge classifies execution failures into readable categories.
 
 ---
 
-## 🛠 Repair System
+# 🛠 Repair System
 
 When execution fails:
 
@@ -270,11 +281,13 @@ Repair history is:
 - Session-based
 - Privacy-safe
 - Non-persistent across users
-- Visible only within current session
+- Session-only storage
+- No cross-user exposure
+- Memory cleared after session ends
 
 ---
 
-## 📸 Screenshots
+# 📸 Screenshots
 
 ### Home UI
 ![Home UI](Screenshots/Home%20UI.png)
@@ -299,7 +312,7 @@ Repair history is:
 
 ---
 
-## 🛣 Roadmap
+# 🛣 Roadmap
 
 ## Current
 
@@ -307,10 +320,11 @@ Repair history is:
 ✅ Execution  
 ✅ Repair agent  
 ✅ Error classification  
-✅ Session repair memory  
+✅ Session repair history  
 ✅ Smart Paste  
 ✅ UI polish  
 ✅ GitHub integration  
+✅ Live Streamlit deployment  
 
 ## Planned
 
@@ -321,24 +335,26 @@ Repair history is:
 
 ---
 
-## 🤝 Contributing
+# 🤝 Contributing
 
 Contributions, improvements and feedback are welcome.
 
-1. Fork repository
-2. Create feature branch
-3. Commit changes
-4. Open pull request
+1. Fork repository  
+2. Create feature branch  
+3. Commit changes  
+4. Open pull request  
 
 ---
 
-## 📜 License
+# 📜 License
 
 MIT License
 
+See `LICENSE` file for details.
+
 ---
 
-## 👨‍💻 Author
+# 👨‍💻 Author
 
 **Lakesh Kumar**
 
