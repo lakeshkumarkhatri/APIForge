@@ -1,5 +1,5 @@
 import json
-
+import re 
 
 # ─────────────────────────────────────────────
 # UTILITY HELPERS
@@ -137,6 +137,28 @@ def parse_raw_input(raw_input: str) -> dict:
     return result
 
 
+
+def _extract_client_requested_scenario_limit(client_instructions: str):
+    """
+    Parses client instructions like:
+    - 3 scenarios
+    - maximum 3 scenarios
+    - max 4 scenario
+    Returns int or None
+    """
+    if not client_instructions:
+        return None
+
+    match = re.search(
+        r'(?:max(?:imum)?\s*)?(\d+)\s*scenario',
+        client_instructions.lower()
+    )
+    if match:
+        return int(match.group(1))
+
+    return None
+
+
 def _build_grounding_block(api_url: str, method: str, body) -> str:
     """
     Builds a universal grounding constraint block injected into every prompt.
@@ -188,6 +210,12 @@ def build_prompt(
     api_notes
 ):
     grounding = _build_grounding_block(api_url, method, body)
+
+    effective_scenario_count = scenario_count
+    requested_limit = _extract_client_requested_scenario_limit(client_instructions)
+
+    if requested_limit:
+        effective_scenario_count = min(requested_limit, scenario_count)
 
     prompt = f"""
 You are a professional API Code Generation Agent.
@@ -276,7 +304,8 @@ def build_scenario_prompt(
             params,
             body,
             scenario_count,
-            api_notes
+            api_notes,
+            client_instructions
         )
     else:
         return _build_python_scenario_prompt(
@@ -289,14 +318,16 @@ def build_scenario_prompt(
             body,
             response_format,
             scenario_count,
-            api_notes
+            api_notes,
+            client_instructions
         )
 
 
 def build_universal_scenario_prompt(
     raw_input: str,
     output_language: str = "cypress",
-    scenario_count_override: int = None
+    scenario_count_override: int = None,
+    client_instructions: str = ""
 ):
     """
     Accepts raw API description in ANY format.
@@ -341,6 +372,12 @@ def build_universal_scenario_prompt(
     # Build a proxy dict so get_scenario_count can count fields correctly
     _body_proxy = {f: None for f in parsed["fields"]} if parsed["fields"] else {}
     scenario_count = get_scenario_count(_body_proxy, override=scenario_count_override)
+
+    effective_scenario_count = scenario_count
+    requested_limit = _extract_client_requested_scenario_limit(client_instructions)
+
+    if requested_limit:
+        effective_scenario_count = min(requested_limit, scenario_count)
 
     prompt = f"""
 You are a universal API test scenario generator with deep understanding of REST APIs, QA testing, and real-world backend behavior.
@@ -402,7 +439,7 @@ FINAL CHECKS BEFORE GENERATING:
 ORIGINAL USER INPUT (reference only — values already extracted above):
 {raw_input}
 
-Generate exactly {scenario_count} scenario(s) now.
+Generate exactly {effective_scenario_count} scenario(s) now.
 """
     return prompt
 
@@ -421,7 +458,8 @@ def _build_python_scenario_prompt(
     body,
     response_format,
     scenario_count,
-    api_notes
+    api_notes,
+    client_instructions=""
 ):
     scenario_rules = _get_scenario_rules()
     naming_rules = _get_naming_rules()
@@ -487,7 +525,7 @@ OUTPUT FORMAT:
 
 {output_rules}
 
-Generate exactly {scenario_count} scenario(s) now.
+Generate exactly {effective_scenario_count} scenario(s) now.
 """
     return prompt
 
@@ -500,13 +538,20 @@ def _build_cypress_scenario_prompt(
     params,
     body,
     scenario_count,
-    api_notes
+    api_notes,
+    client_instructions=""
 ):
     scenario_rules = _get_scenario_rules()
     naming_rules = _get_naming_rules()
     analysis_rules = _get_analysis_rules()
     output_rules = _get_cypress_output_rules()
     grounding = _build_grounding_block(api_url, method, body)
+
+    effective_scenario_count = scenario_count
+    requested_limit = _extract_client_requested_scenario_limit(client_instructions)
+
+    if requested_limit:
+        effective_scenario_count = min(requested_limit, scenario_count)
 
     prompt = f"""
 You are a professional Cypress API Test Scenario Generation Agent with deep QA expertise.
@@ -562,7 +607,7 @@ OUTPUT FORMAT:
 
 {output_rules}
 
-Generate exactly {scenario_count} scenario(s) now.
+Generate exactly {effective_scenario_count} scenario(s) now.
 """
     return prompt
 
@@ -793,6 +838,20 @@ SCENARIO 5 — Missing Required Field (if 2+ body fields)
 - failOnStatusCode = false
 - Expected: 400 or 422
 - cy.log(JSON.stringify(res.body)) MUST be present
+
+═══════════════════════════════════════════
+
+CLIENT-STYLE COVERAGE PRINCIPLE:
+
+- Do NOT generate every theoretical validation case
+- Prefer concise, realistic, and high-value QA coverage
+- Avoid repetitive scenarios
+- Generate the most meaningful scenarios a real QA/client would typically write
+- Field analysis is guidance, not an exhaustive checklist
+- For file upload / presigned URL APIs:
+  * invalid file_type / MIME validation has HIGHER priority than negative numeric size validation
+  * prefer invalid MIME/file_type over negative file_size when selecting only one file-specific scenario
+  * choose the most realistic failure a client would usually test first
 
 ═══════════════════════════════════════════
 

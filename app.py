@@ -82,6 +82,9 @@ if "scenario_code" not in st.session_state:
 if "scenario_language" not in st.session_state:
     st.session_state["scenario_language"] = "cypress"
 
+if "client_instructions" not in st.session_state:
+    st.session_state["client_instructions"] = ""
+
 
 # ── UI HEADER ─────────────────────────────────────────────
 st.title("🚀 APIForge")
@@ -90,7 +93,9 @@ st.divider()
 
 # ── SIDEBAR ───────────────────────────────────────────────
 with st.sidebar:
+
     st.header("⚙ APIForge Control Panel")
+
     mode = st.radio(
         "Choose Input Mode",
         [
@@ -99,7 +104,48 @@ with st.sidebar:
             "Scenario Generator"
         ]
     )
+
     st.divider()
+
+    # ── CLIENT INSTRUCTIONS ───────────────────────────────
+    st.subheader("📋 Generation Instructions")
+
+    st.caption(
+        "Optional guidance applied to every generation. "
+        "Cleared on browser refresh."
+    )
+
+    client_instructions_input = st.text_area(
+        "Instructions",
+        value=st.session_state["client_instructions"],
+        height=150,
+        placeholder=(
+            "e.g.\n"
+            "Keep tests concise\n"
+            "One field-specific invalid only\n"
+            "Focus on request contract\n"
+            "Avoid duplicate validations"
+        ),
+        key="instructions_input"
+    )
+
+    if client_instructions_input != st.session_state["client_instructions"]:
+        st.session_state["client_instructions"] = client_instructions_input
+
+    col_a, col_b = st.columns([2, 1])
+
+    with col_b:
+        if st.button("🗑 Clear", use_container_width=True):
+            st.session_state["client_instructions"] = ""
+            st.rerun()
+
+    if st.session_state["client_instructions"].strip():
+        st.success("✅ Instructions active")
+    else:
+        st.info("No instructions set")
+
+    st.divider()
+
     st.info(
         """
         APIForge
@@ -173,7 +219,6 @@ if mode == "Manual":
     params = parse_key_value_input(params_input)
     body = parse_body_input(body_input)
 
-    # ── GENERATE BUTTON ───────────────────────────────────
     generate_clicked = st.button("🚀 Generate Code", type="primary")
     st.write("")
 
@@ -190,7 +235,8 @@ if mode == "Manual":
 
             prompt = build_prompt(
                 api_url, method, auth_type, auth_instruction,
-                headers, params, body, response_format, api_notes
+                headers, params, body, response_format, api_notes,
+                client_instructions=st.session_state["client_instructions"]
             )
 
             with st.spinner("Generating..."):
@@ -236,7 +282,6 @@ elif mode == "Smart Paste":
         response_format = "json"
         api_notes = ""
 
-    # ── GENERATE BUTTON ───────────────────────────────────
     generate_clicked = st.button("🚀 Generate Code", type="primary")
     st.write("")
 
@@ -253,7 +298,8 @@ elif mode == "Smart Paste":
 
             prompt = build_prompt(
                 api_url, method, auth_type, auth_instruction,
-                headers, params, body, response_format, api_notes
+                headers, params, body, response_format, api_notes,
+                client_instructions=st.session_state["client_instructions"]
             )
 
             with st.spinner("Generating..."):
@@ -283,7 +329,6 @@ else:
 
     st.divider()
 
-    # ── INPUT AREA ────────────────────────────────────────
     with st.expander("📥 Input", expanded=True):
 
         scenario_input_mode = st.radio(
@@ -349,7 +394,6 @@ else:
                 key="s_notes"
             )
 
-    # ── OUTPUT LANGUAGE ───────────────────────────────────
     with st.expander("⚙️ Output Settings", expanded=True):
 
         output_language = st.radio(
@@ -360,7 +404,6 @@ else:
 
         st.session_state["scenario_language"] = output_language.lower()
 
-    # ── GENERATE SCENARIOS BUTTON ─────────────────────────
     generate_scenarios_clicked = st.button(
         "🧪 Generate Scenarios",
         type="primary"
@@ -379,7 +422,8 @@ else:
                 with st.spinner("Analysing input and generating scenarios..."):
                     prompt = build_universal_scenario_prompt(
                         raw_input=raw_input,
-                        output_language=lang
+                        output_language=lang,
+                        client_instructions=st.session_state["client_instructions"]
                     )
                     scenario_code = generate_code(prompt)
 
@@ -418,13 +462,13 @@ else:
                         body=s_body,
                         response_format="json",
                         api_notes=s_api_notes,
-                        output_language=lang
+                        output_language=lang,
+                        client_instructions=st.session_state["client_instructions"]
                     )
                     scenario_code = generate_code(prompt)
 
                 st.session_state["scenario_code"] = scenario_code
 
-    # ── SHOW GENERATED SCENARIOS ──────────────────────────
     if st.session_state["scenario_code"]:
 
         st.divider()
@@ -455,7 +499,6 @@ else:
 
 # ══════════════════════════════════════════════════════════
 # GENERATED CODE SECTION
-# (Only shown in Manual and Smart Paste modes)
 # ══════════════════════════════════════════════════════════
 if mode in ["Manual", "Smart Paste"] and st.session_state["generated_code"]:
 
@@ -474,7 +517,6 @@ if mode in ["Manual", "Smart Paste"] and st.session_state["generated_code"]:
         mime="text/x-python"
     )
 
-    # ── EXECUTION SECTION ─────────────────────────────────
     st.divider()
     st.subheader("▶ Execution")
 
@@ -505,7 +547,6 @@ if mode in ["Manual", "Smart Paste"] and st.session_state["generated_code"]:
     else:
         st.info("Click 'Run Generated Code' to execute.")
 
-    # ── REPAIR SECTION ────────────────────────────────────
     if st.session_state["stderr"]:
 
         st.divider()
@@ -562,7 +603,6 @@ if mode in ["Manual", "Smart Paste"] and st.session_state["generated_code"]:
                 elif stdout:
                     st.success(stdout)
 
-        # ── REPAIR HISTORY ────────────────────────────────
         st.divider()
         st.subheader("Repair History")
 
