@@ -1,5 +1,6 @@
 import json
-import re 
+import re
+
 
 # ─────────────────────────────────────────────
 # UTILITY HELPERS
@@ -137,28 +138,6 @@ def parse_raw_input(raw_input: str) -> dict:
     return result
 
 
-
-def _extract_client_requested_scenario_limit(client_instructions: str):
-    """
-    Parses client instructions like:
-    - 3 scenarios
-    - maximum 3 scenarios
-    - max 4 scenario
-    Returns int or None
-    """
-    if not client_instructions:
-        return None
-
-    match = re.search(
-        r'(?:max(?:imum)?\s*)?(\d+)\s*scenario',
-        client_instructions.lower()
-    )
-    if match:
-        return int(match.group(1))
-
-    return None
-
-
 def _build_grounding_block(api_url: str, method: str, body) -> str:
     """
     Builds a universal grounding constraint block injected into every prompt.
@@ -193,7 +172,25 @@ RULES:
 Violating any of the above is a critical failure.
 """
 
+def _extract_client_requested_scenario_limit(client_instructions: str):
+    """
+    Parse instructions like:
+    - 3 scenarios
+    - maximum 2 scenarios
+    - max 4 scenario
+    """
+    if not client_instructions:
+        return None
 
+    match = re.search(
+        r'(?:max(?:imum)?\s*)?(\d+)\s*scenario',
+        client_instructions.lower()
+    )
+
+    if match:
+        return int(match.group(1))
+
+    return None
 # ─────────────────────────────────────────────
 # PUBLIC BUILDERS
 # ─────────────────────────────────────────────
@@ -207,19 +204,23 @@ def build_prompt(
     params,
     body,
     response_format,
-    api_notes
+    api_notes,
+    client_instructions=""
 ):
     grounding = _build_grounding_block(api_url, method, body)
+    client_guidance = ""
 
-    effective_scenario_count = scenario_count
-    requested_limit = _extract_client_requested_scenario_limit(client_instructions)
+    if client_instructions.strip():
+        client_guidance = f"""
+    CLIENT EXTRA INSTRUCTIONS:
+    {client_instructions}
 
-    if requested_limit:
-        effective_scenario_count = min(requested_limit, scenario_count)
-
+Follow these instructions in addition to all standard rules.
+"""
+        
     prompt = f"""
 You are a professional API Code Generation Agent.
-
+{client_guidance}
 Your task is to generate COMPLETE, EXECUTABLE, and COPY-PASTE RUNNABLE Python code using the requests library.
 
 {grounding}
@@ -291,7 +292,8 @@ def build_scenario_prompt(
     response_format,
     api_notes,
     output_language="python",
-    scenario_count_override: int = None
+    scenario_count_override=None,
+    client_instructions=""
 ):
     scenario_count = get_scenario_count(body, override=scenario_count_override)
 
@@ -379,7 +381,20 @@ def build_universal_scenario_prompt(
     if requested_limit:
         effective_scenario_count = min(requested_limit, scenario_count)
 
-    prompt = f"""
+    client_guidance = ""
+
+    if client_instructions.strip():
+        client_guidance = f"""
+    ══════════════════════════════════════════
+    CLIENT EXTRA INSTRUCTIONS
+    ══════════════════════════════════════════
+
+    {client_instructions}
+
+    These instructions are additional constraints and must be followed.
+    """
+
+    prompt = f"""    
 You are a universal API test scenario generator with deep understanding of REST APIs, QA testing, and real-world backend behavior.
 
 ╔══════════════════════════════════════════════════════════════════════╗
@@ -405,7 +420,7 @@ ABSOLUTE RULES — VIOLATION = CRITICAL FAILURE:
 6. DO NOT remove any field from the list above
 7. DO NOT use any endpoint from your training data (e.g. /api/payments, /api/invoices, /api/orders)
 8. If a field name looks unusual — use it exactly anyway
-9. The scenario count is fixed at {scenario_count} — generate exactly that many
+9. Default scenario count = {scenario_count}. Final generation count after client limits = {effective_scenario_count}.
 
 ══════════════════════════════════════════════════════════════════
 FIELD ANALYSIS — apply to the {fields_count} fields listed above
@@ -430,7 +445,7 @@ OUTPUT FORMAT
 ══════════════════════════════════════════
 
 {output_rules}
-
+{client_guidance}
 FINAL CHECKS BEFORE GENERATING:
 - Is the endpoint in every apiRequest call exactly: {endpoint}? If not, fix it.
 - Does the helper function body contain exactly these fields: {fields_locked}? If not, fix it.
@@ -466,7 +481,15 @@ def _build_python_scenario_prompt(
     analysis_rules = _get_analysis_rules()
     output_rules = _get_python_output_rules()
     grounding = _build_grounding_block(api_url, method, body)
+    client_guidance = ""
 
+    if client_instructions.strip():
+        client_guidance = f"""
+    CLIENT EXTRA INSTRUCTIONS:
+    {client_instructions}
+
+    Follow these instructions in addition to all rules.
+    """
     prompt = f"""
 You are a professional API Test Scenario Generation Agent with deep QA expertise.
 
@@ -524,6 +547,7 @@ SCENARIO GENERATION RULES:
 OUTPUT FORMAT:
 
 {output_rules}
+{client_guidance}
 
 Generate exactly {effective_scenario_count} scenario(s) now.
 """
@@ -546,13 +570,15 @@ def _build_cypress_scenario_prompt(
     analysis_rules = _get_analysis_rules()
     output_rules = _get_cypress_output_rules()
     grounding = _build_grounding_block(api_url, method, body)
+    client_guidance = ""
 
-    effective_scenario_count = scenario_count
-    requested_limit = _extract_client_requested_scenario_limit(client_instructions)
+    if client_instructions.strip():
+        client_guidance = f"""
+    CLIENT EXTRA INSTRUCTIONS:
+    {client_instructions}
 
-    if requested_limit:
-        effective_scenario_count = min(requested_limit, scenario_count)
-
+    Follow these instructions in addition to all rules.
+    """
     prompt = f"""
 You are a professional Cypress API Test Scenario Generation Agent with deep QA expertise.
 
@@ -606,6 +632,7 @@ SCENARIO GENERATION RULES:
 OUTPUT FORMAT:
 
 {output_rules}
+{client_guidance}
 
 Generate exactly {effective_scenario_count} scenario(s) now.
 """
@@ -838,20 +865,6 @@ SCENARIO 5 — Missing Required Field (if 2+ body fields)
 - failOnStatusCode = false
 - Expected: 400 or 422
 - cy.log(JSON.stringify(res.body)) MUST be present
-
-═══════════════════════════════════════════
-
-CLIENT-STYLE COVERAGE PRINCIPLE:
-
-- Do NOT generate every theoretical validation case
-- Prefer concise, realistic, and high-value QA coverage
-- Avoid repetitive scenarios
-- Generate the most meaningful scenarios a real QA/client would typically write
-- Field analysis is guidance, not an exhaustive checklist
-- For file upload / presigned URL APIs:
-  * invalid file_type / MIME validation has HIGHER priority than negative numeric size validation
-  * prefer invalid MIME/file_type over negative file_size when selecting only one file-specific scenario
-  * choose the most realistic failure a client would usually test first
 
 ═══════════════════════════════════════════
 
