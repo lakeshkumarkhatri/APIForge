@@ -1,10 +1,10 @@
 # 🚀 APIForge
 
-### AI-Powered API Code Generation, Execution and Repair
+### AI-Powered API Code Generation, Execution, Repair and Test Scenario Generation
 
-APIForge is an AI-powered developer tool that generates, executes, classifies and repairs API integration code using natural inputs or curl commands.
+APIForge is an AI-powered developer tool that generates, executes, classifies and repairs API integration code — and automatically generates professional Cypress and Python test scenarios from any API input.
 
-Built to simplify API integration workflows through intelligent code generation and agent-assisted debugging.
+Built to simplify API integration and testing workflows through intelligent code generation and agent-assisted debugging.
 
 🌐 **Live App:** https://apiforge.streamlit.app
 
@@ -24,13 +24,23 @@ Built to simplify API integration workflows through intelligent code generation 
 - Download generated and repaired code
 - Session-safe repair history
 
+## Scenario Generator (New)
+
+- Generate Cypress or Python test scenarios from any API input
+- Accepts raw text, curl commands, plain English, mixed language
+- Intelligent field type detection and analysis
+- Auto-detects auth, endpoint, method and body fields
+- Scoped fixture data pattern (`data.[resource].field`)
+- Client instructions support for custom test style
+- Download generated scenarios as `.cy.js` or `.py`
+
 ---
 
 # 🧠 Agent Intelligence
 
 APIForge is more than a code generator.
 
-It includes agentic capabilities such as:
+It includes agentic capabilities:
 
 - Error classification
 - Session-based repair memory
@@ -38,15 +48,21 @@ It includes agentic capabilities such as:
 - Privacy-safe repair tracking
 - Technical error inspection
 - Agent-assisted debugging workflow
+- Universal API input parser
+- Semantic field type analysis
+- Instruction-aware scenario generation
 
 ---
 
 # 🎨 UI Features
 
 - Professional Streamlit interface
-- Sidebar controls
+- Sidebar controls with client instruction panel
 - Structured workflow sections
 - Generated → Execute → Repair flow
+- Scenario Generator mode
+- Raw input and structured input modes
+- Cypress and Python output toggle
 - Expandable input sections
 - Clean execution UX
 - Download buttons
@@ -71,6 +87,17 @@ Input
 → Classify Error
 → Repair
 → Session Repair History
+```
+
+Scenario Generator workflow:
+
+```text
+Raw Input (any format)
+→ Python Parser (extracts endpoint, method, auth, fields)
+→ Field Analysis (semantic type classification)
+→ Client Instructions (applied if set)
+→ Gemini Scenario Generation
+→ Download as .cy.js or .py
 ```
 
 ---
@@ -131,23 +158,17 @@ APIForge/
 git clone https://github.com/lakeshkumarkhatri/APIForge.git
 ```
 
----
-
 ## 2. Move Into Project
 
 ```bash
 cd APIForge
 ```
 
----
-
 ## 3. Create Virtual Environment
 
 ```bash
 python -m venv venv
 ```
-
----
 
 ## 4. Activate Virtual Environment
 
@@ -163,27 +184,19 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
----
-
 ## 5. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
 ## 6. Add Environment Variables
 
-Create a `.env` file.
-
-Add:
+Create a `.env` file and add:
 
 ```env
 GOOGLE_API_KEY=YOUR_GEMINI_API_KEY
 ```
-
----
 
 ## 7. Run APIForge
 
@@ -205,17 +218,13 @@ python main.py
 
 APIForge is deployed on Streamlit Cloud.
 
-Live URL:
-
-https://apiforge.streamlit.app
+Live URL: https://apiforge.streamlit.app
 
 ---
 
 # 🧪 Supported Workflows
 
 ## Manual Mode
-
-APIForge supports:
 
 - API URL
 - HTTP Method
@@ -225,8 +234,6 @@ APIForge supports:
 - Request Body
 - Response Format
 - API Notes
-
----
 
 ## Smart Paste Mode
 
@@ -247,6 +254,57 @@ curl --request GET \
 --header "Accept: application/json"
 ```
 
+## Scenario Generator Mode
+
+Paste anything — API docs, curl, plain English, mixed language — and APIForge generates complete test scenarios.
+
+Example input formats:
+
+```text
+POST /api/orders | auth
+Request body: { "product_id": "string", "quantity": 0 }
+```
+
+```bash
+curl -X POST https://api.example.com/users/register \
+-d '{"email":"test@example.com","password":"pass123"}'
+```
+
+```text
+// ye API karna hai login ke liye
+POST /auth/login
+body: email aur password chahiye
+```
+
+Generated output includes:
+
+- Helper function with `overrideBody` pattern
+- Scoped fixture data access (`data.[resource].field`)
+- Valid request scenario
+- Empty fields scenario
+- Null values scenario
+- Missing body scenario
+- Missing required field scenario
+- Field-specific scenarios (email, enum, numeric, date, file, monetary)
+- No auth scenario
+
+---
+
+# 📋 Client Instructions Panel
+
+Set generation guidance in the sidebar that applies to every scenario generated.
+
+Examples:
+
+```text
+Keep tests concise
+One field-specific invalid only
+Focus on request contract
+Avoid duplicate validations
+```
+
+Instructions are session-based and cleared on browser refresh.
+
 ---
 
 # 🔧 Error Intelligence
@@ -254,7 +312,7 @@ curl --request GET \
 APIForge classifies execution failures into readable categories.
 
 | Error Type | Classification |
-|------------|---------------|
+|---|---|
 | DNS Failure | 🌐 Connection Error |
 | Invalid Token | 🔐 Unauthorized |
 | Timeout | ⏳ Timeout Error |
@@ -276,14 +334,24 @@ Run
 → Re-run
 ```
 
-Repair history is:
+Repair history is session-based, privacy-safe, and cleared after session ends.
 
-- Session-based
-- Privacy-safe
-- Non-persistent across users
-- Session-only storage
-- No cross-user exposure
-- Memory cleared after session ends
+---
+
+# 🧬 Scenario Generation Intelligence
+
+APIForge analyses each field in the request body semantically:
+
+| Field Type | Examples | Test Generated |
+|---|---|---|
+| Email | email, user_email | Invalid format |
+| Password | password, passcode | Weak password |
+| Monetary | amount, price, total, fee | Zero + negative |
+| File | file_name, file_size, file_type | Invalid MIME + oversized + zero |
+| Enum | status, type, role, ticket_type | Invalid enum value |
+| Numeric | quantity, age, count, attendee_count | Negative value |
+| Date | start_date, check_in_date | Invalid format |
+| ID | event_id, product_id, user_id | Non-existent ID |
 
 ---
 
@@ -297,6 +365,12 @@ Repair history is:
 
 ### Smart Paste Mode
 ![Smart Paste](Screenshots/Smart%20Paste%20Mode.png)
+
+### Scenario Generator
+![Scenario Generator](Screenshots/Scenario%20Generator.png)
+
+### Client Instructions Panel
+![Client Instructions](Screenshots/Client%20Instructions.png)
 
 ### Generated Code
 ![Generated Code](Screenshots/Generated%20Code.png)
@@ -314,24 +388,38 @@ Repair history is:
 
 # 🛣 Roadmap
 
-## Current
+## V1 — Completed
 
-✅ Code generation  
-✅ Execution  
-✅ Repair agent  
-✅ Error classification  
-✅ Session repair history  
-✅ Smart Paste  
-✅ UI polish  
-✅ GitHub integration  
-✅ Live Streamlit deployment  
+✅ Code generation
+✅ Execution
+✅ Repair agent
+✅ Error classification
+✅ Session repair history
+✅ Smart Paste
+✅ UI polish
+✅ GitHub integration
+✅ Live Streamlit deployment
 
-## Planned
+## V2 — Completed
 
-- Auto-repair loop (V2)
+✅ Scenario Generator mode
+✅ Cypress test generation
+✅ Python test generation
+✅ Universal input parser
+✅ Semantic field type analysis
+✅ Scoped fixture data pattern
+✅ Client instructions panel
+✅ Auth-aware scenario generation
+✅ Instruction-compliant output
+
+## V3 — Planned
+
+- Auto-repair loop
 - Smarter repair strategies
 - Multi-model support
 - Enhanced agent workflows
+- Scenario history and versioning
+- Team collaboration features
 
 ---
 
@@ -339,18 +427,16 @@ Repair history is:
 
 Contributions, improvements and feedback are welcome.
 
-1. Fork repository  
-2. Create feature branch  
-3. Commit changes  
-4. Open pull request  
+1. Fork repository
+2. Create feature branch
+3. Commit changes
+4. Open pull request
 
 ---
 
 # 📜 License
 
-MIT License
-
-See `LICENSE` file for details.
+MIT License — see `LICENSE` file for details.
 
 ---
 
